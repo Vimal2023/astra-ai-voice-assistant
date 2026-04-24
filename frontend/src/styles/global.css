@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   src/styles/global.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import './tokens.css';
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  background-image:
+    var(--gradient-bg),
+    radial-gradient(ellipse 55% 40% at 80% 90%, hsl(222, 28%, 24%), transparent);
+  background-attachment: fixed;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Type ────────────────────────────────────────────────────────────────── */
+h1, h2, h3 { font-weight: var(--weight-semi); line-height: var(--leading-tight); }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+/* ── Inputs ──────────────────────────────────────────────────────────────── */
+input, textarea { font-family: inherit; font-size: inherit; color: inherit; background: transparent; border: none; outline: none; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-subtle); border-radius: var(--r-full); }
+
+/* ── Focus ───────────────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: var(--r-sm); }
+
+/* ── Selection ───────────────────────────────────────────────────────────── */
+::selection { background: var(--color-accent-dim); }
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

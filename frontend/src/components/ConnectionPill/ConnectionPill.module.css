@@ -1,0 +1,55 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   src/components/ConnectionPill/ConnectionPill.module.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+@import '../../styles/tokens.css';
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px var(--sp-3);
+  border-radius: var(--r-full);
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border-subtle);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-dim);
+  letter-spacing: 0.03em;
+  user-select: none;
+  transition:
+    background var(--dur-normal) var(--ease),
+    color var(--dur-normal) var(--ease);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  flex-shrink: 0;
+  transition: background var(--dur-normal) var(--ease);
+}
+
+/* States */
+.dot.connected    { background: var(--color-success); }
+.dot.disconnected { background: var(--color-text-dim); }
+.dot.error        { background: var(--color-error); }
+.dot.streaming {
+  background: var(--color-accent);
+  animation: pillPulse 1s ease-in-out infinite;
+}
+.dot.recording {
+  background: var(--color-accent);
+  animation: pillPulse 0.7s ease-in-out infinite;
+}
+
+@keyframes pillPulse {
+  0%, 100% { opacity: 1; transform: scale(1);   }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* Pill colour when streaming/recording */
+.pill.active {
+  background: var(--color-accent-dim);
+  border-color: hsl(38, 95%, 56%, 0.20);
+  color: var(--color-accent);
+}

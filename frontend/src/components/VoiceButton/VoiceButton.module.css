@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   src/components/VoiceButton/VoiceButton.module.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+@import '../../styles/tokens.css';
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+  outline: none;
+}
+
+.button:hover {
+  transform: scale(1.06);
+  box-shadow: var(--shadow-glow), var(--shadow-lg);
+}
+
+.button:active { transform: scale(0.96); }
+
+.button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+
+.button.recording {
+  background: linear-gradient(135deg, hsl(0,70%,55%), hsl(22,90%,52%));
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(0,70%,55%,0.5), var(--shadow-md); }
+  50%       { box-shadow: 0 0 0 14px hsl(0,70%,55%,0), var(--shadow-md); }
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  color: white;
+  pointer-events: none;
+}
+
+.label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,305 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   src/components/VoiceConsole/VoiceConsole.module.css
+   ═══════════════════════════════════════════════════════════════════════════ */
+@import '../../styles/tokens.css';
+
+/* ── Page shell ──────────────────────────────────────────────────────────── */
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient copper-gold orb behind the card */
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 45% 35% at 50% 85%,
+      hsl(34, 100%, 60%, 0.09), transparent 70%);
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+/* ── Header row ──────────────────────────────────────────────────────────── */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: var(--sp-5) var(--sp-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: var(--z-raised);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  text-decoration: none;
+}
+
+.brandGlyph {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-md);
+  background: var(--gradient-accent);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: var(--shadow-gold-sm);
+  flex-shrink: 0;
+}
+
+.brandName {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+/* ── Central console card ────────────────────────────────────────────────── */
+.console {
+  position: relative;
+  z-index: var(--z-raised);
+  width: 100%;
+  max-width: 520px;
+  min-height: min(640px, 88dvh);
+  display: flex;
+  flex-direction: column;
+
+  /* Frosted glass */
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-2xl);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 hsl(220, 20%, 48%, 0.5);
+
+  overflow: hidden;
+  transition: border-color var(--dur-normal) var(--ease);
+}
+
+/* Subtle top-edge highlight — silver shimmer */
+.console::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    hsl(220, 18%, 72%, 0.6) 30%,
+    hsl(220, 18%, 72%, 0.6) 70%,
+    transparent);
+}
+
+.console.recording {
+  border-color: hsl(38, 95%, 56%, 0.45);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px hsl(38, 95%, 56%, 0.15),
+    inset 0 1px 0 hsl(38, 95%, 56%, 0.2);
+}
+
+/* ── Inner layout of the card ────────────────────────────────────────────── */
+.consoleInner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+
+/* ── Top strip: "Astra" label + status ───────────────────────────────────── */
+.consoleTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-5) var(--sp-6) var(--sp-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.consoleTitle {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-dim);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Response / idle area ────────────────────────────────────────────────── */
+.responseArea {
+  flex: 1;
+  padding: var(--sp-6) var(--sp-6) var(--sp-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* text naturally sits near bottom before mic */
+  scroll-behavior: smooth;
+}
+
+/* ── Idle state ──────────────────────────────────────────────────────────── */
+.idleState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  text-align: center;
+  padding: var(--sp-8) 0;
+  opacity: 0;
+  animation: fadeIn 0.6s var(--ease) 0.4s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.idleIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-full);
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  display: grid;
+  place-items: center;
+  color: var(--color-text-dim);
+}
+
+.idleText {
+  font-size: var(--text-sm);
+  color: var(--color-text-dim);
+  line-height: var(--leading-snug);
+  max-width: 240px;
+}
+
+/* ── Transcript pill ─────────────────────────────────────────────────────── */
+.transcriptPill {
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  background: var(--color-accent-dim);
+  border: 1px solid hsl(38, 95%, 56%, 0.20);
+  align-self: flex-end;
+  max-width: 80%;
+  text-align: right;
+}
+
+.transcriptLabel {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 2px;
+}
+
+.transcriptText {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: var(--leading-snug);
+}
+
+/* ── Error toast ─────────────────────────────────────────────────────────── */
+.errorPill {
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--color-error-dim);
+  border: 1px solid hsl(4, 65%, 52%, 0.25);
+  font-size: var(--text-sm);
+  color: hsl(4, 70%, 68%);
+  text-align: center;
+}
+
+/* ── Bottom mic section ──────────────────────────────────────────────────── */
+.consoleBottom {
+  padding: var(--sp-6) var(--sp-6) var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  border-top: 1px solid var(--color-border-subtle);
+  background: hsl(220, 22%, 20%, 0.5);
+}
+
+.micHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-dim);
+  letter-spacing: 0.04em;
+  text-align: center;
+  min-height: 1.2em;
+  transition: color var(--dur-normal) var(--ease);
+}
+
+.micHint.active { color: var(--color-accent); }
+
+/* ── Action row below mic ─────────────────────────────────────────────────── */
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+}
+
+.clearBtn {
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.clearBtn:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text-2);
+  border-color: var(--color-text-dim);
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .page { padding: 0; }
+
+  .console {
+    max-width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .responseArea { padding: var(--sp-5) var(--sp-5) var(--sp-3); }
+  .consoleTop   { padding: var(--sp-4) var(--sp-5); }
+  .consoleBottom { padding: var(--sp-5) var(--sp-5) var(--sp-6); }
+
+  /* All text inside the response area centres on mobile */
+  .responseArea,
+  .idleState,
+  .transcriptPill {
+    align-items: center;
+    text-align: center;
+  }
+
+  .transcriptPill {
+    align-self: center;
+    text-align: center;
+  }
+}

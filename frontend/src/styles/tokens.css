@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   src/styles/tokens.css  —  Navy + Gold design system
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Palette: Bright Blue-Gray ───────────────────────────────────────── */
+  --navy-950: hsl(222, 30%, 18%);   /* page background — mid-tone blue-gray */
+  --navy-900: hsl(222, 28%, 22%);
+  --navy-800: hsl(220, 24%, 27%);   /* glass card base — soft charcoal */
+  --navy-700: hsl(220, 20%, 33%);   /* elevated surface */
+  --navy-600: hsl(220, 18%, 40%);   /* input / inner cards */
+  --navy-500: hsl(220, 16%, 52%);   /* borders */
+  --navy-400: hsl(220, 12%, 65%);   /* muted text, dividers */
+  --navy-300: hsl(220, 8%,  80%);   /* secondary text */
+  --navy-100: hsl(220, 6%,  93%);   /* primary text */
+  --navy-050: hsl(0,   0%, 100%);   /* headings — pure white */
+
+  /* ── Palette: Copper-Gold Accent (punchier) ──────────────────────────── */
+  --gold-600: hsl(30, 90%, 42%);
+  --gold-500: hsl(32, 95%, 52%);
+  --gold-400: hsl(34, 100%, 60%);   /* primary accent — vivid copper-gold */
+  --gold-300: hsl(36, 100%, 68%);   /* hover accent */
+  --gold-200: hsl(38, 100%, 76%);   /* light glow */
+
+  /* ── Semantic aliases ────────────────────────────────────────────────── */
+  --color-bg:            var(--navy-950);
+  --color-bg-2:          var(--navy-900);
+  --color-surface:       var(--navy-800);
+  --color-surface-2:     var(--navy-700);
+  --color-surface-3:     var(--navy-600);
+  --color-border:        var(--navy-500);
+  --color-border-subtle: hsl(220, 20%, 35%);
+
+  /* High-contrast text — crisp white / cream */
+  --color-text:          hsl(0, 0%, 100%);      /* pure white headings */
+  --color-text-2:        hsl(220, 6%,  95%);    /* near-white body */
+  --color-text-muted:    hsl(220, 8%,  82%);    /* muted secondary */
+  --color-text-dim:      hsl(220, 10%, 68%);    /* dim labels */
+
+  --color-accent:        var(--gold-400);
+  --color-accent-hover:  var(--gold-300);
+  --color-accent-dim:    hsl(34, 100%, 60%, 0.18);
+  --color-accent-glow:   hsl(34, 100%, 60%, 0.35);
+
+  --color-success:       hsl(152, 60%, 50%);
+  --color-error:         hsl(4, 70%, 60%);
+  --color-error-dim:     hsl(4, 65%, 52%, 0.18);
+
+  /* ── Glass surface — lighter charcoal card ───────────────────────────── */
+  --glass-bg:            hsl(220, 22%, 24%, 0.82);
+  --glass-bg-hover:      hsl(220, 22%, 28%, 0.88);
+  --glass-border:        hsl(220, 18%, 55%, 0.55);  /* silver-gray stroke */
+  --glass-blur:          blur(20px);
+
+  /* ── Gradients ───────────────────────────────────────────────────────── */
+  --gradient-accent:     linear-gradient(135deg, hsl(34,100%,60%), hsl(24,100%,50%));
+  --gradient-accent-soft:linear-gradient(135deg, hsl(34,100%,60%,0.9), hsl(24,100%,46%,0.9));
+  --gradient-bg:         radial-gradient(ellipse 80% 60% at 50% -10%,
+                           hsl(222,30%,28%), transparent);
+  --gradient-gold-glow:  radial-gradient(circle, hsl(34,100%,60%,0.22) 0%, transparent 70%);
+
+  /* ── Typography ──────────────────────────────────────────────────────── */
+  --font-sans:     'Inter', system-ui, -apple-system, sans-serif;
+  --font-display:  'Inter', system-ui, sans-serif;
+
+  --text-2xs: 0.625rem;
+  --text-xs:  0.6875rem;
+  --text-sm:  0.8125rem;
+  --text-base:0.9375rem;
+  --text-lg:  1.0625rem;
+  --text-xl:  1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semi:    600;
+  --weight-bold:    700;
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.4;
+  --leading-normal: 1.6;
+  --leading-loose:  1.8;
+
+  /* ── Spacing ─────────────────────────────────────────────────────────── */
+  --sp-1:  0.25rem;
+  --sp-2:  0.5rem;
+  --sp-3:  0.75rem;
+  --sp-4:  1rem;
+  --sp-5:  1.25rem;
+  --sp-6:  1.5rem;
+  --sp-8:  2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* ── Border radius ───────────────────────────────────────────────────── */
+  --r-sm:   0.375rem;
+  --r-md:   0.75rem;
+  --r-lg:   1.125rem;
+  --r-xl:   1.75rem;
+  --r-2xl:  2.5rem;
+  --r-full: 9999px;
+
+  /* ── Shadows ──────────────────────────────────────────────────────────── */
+  --shadow-sm:    0 1px 4px  hsl(0,0%,0%,0.30);
+  --shadow-md:    0 4px 20px hsl(0,0%,0%,0.35);
+  --shadow-lg:    0 12px 48px hsl(0,0%,0%,0.45);
+  --shadow-gold:  0 0 28px hsl(34,100%,60%,0.45), 0 0 72px hsl(34,100%,60%,0.16);
+  --shadow-gold-sm: 0 0 14px hsl(34,100%,60%,0.35);
+
+  /* ── Transitions ─────────────────────────────────────────────────────── */
+  --dur-fast:   100ms;
+  --dur-normal: 200ms;
+  --dur-slow:   360ms;
+  --dur-xslow:  600ms;
+  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:    cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:   cubic-bezier(0, 0, 0.2, 1);
+
+  /* ── Z-index ─────────────────────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+}
