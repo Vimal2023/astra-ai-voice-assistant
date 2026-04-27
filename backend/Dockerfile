@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 # Install FFmpeg (Crucial for Whisper)
 RUN apt-get update && \
-    apt-get install -y ffmpeg && \
+    apt-get install -y ffmpeg git && \
     apt-get clean
 
 # Set the working directory
