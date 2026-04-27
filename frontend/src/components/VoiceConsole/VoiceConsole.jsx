@@ -88,7 +88,10 @@ export function VoiceConsole({
       <header className={styles.header} role="banner">
         <div className={styles.brand}>
           <div className={styles.brandGlyph} aria-hidden="true">✦</div>
-          <span className={styles.brandName}>Astra</span>
+          <div className={styles.brandText}>
+            <span className={styles.brandName}>Astra</span>
+            <span className={styles.brandSubtitle}>Voice Assistant</span>
+          </div>
         </div>
       </header>
 
@@ -99,9 +102,8 @@ export function VoiceConsole({
       >
         <div className={styles.consoleInner}>
 
-          {/* Top strip */}
+          {/* Top strip — status pill only */}
           <div className={styles.consoleTop}>
-            <span className={styles.consoleTitle}>Voice Assistant</span>
             <ConnectionPill
               isConnected={isConnected}
               isStreaming={isStreaming}
@@ -120,22 +122,24 @@ export function VoiceConsole({
               </div>
             )}
 
-            {/* Response text */}
-            {showResponse ? (
-              <ResponseStream
-                streamedText={streamedText}
-                isStreaming={isStreaming}
-              />
-            ) : (
-              <IdleState />
-            )}
-
-            {/* User transcript bubble */}
+            {/* User transcript bubble (The Question) */}
             {showTranscript && (
               <div className={styles.transcriptPill}>
                 <p className={styles.transcriptLabel}>You</p>
                 <p className={styles.transcriptText}>{transcript}</p>
               </div>
+            )}
+
+            {/* Response text (The Answer) */}
+            {showResponse ? (
+              <div className={styles.responseWrapper}>
+                <ResponseStream
+                  streamedText={streamedText}
+                  isStreaming={isStreaming}
+                />
+              </div>
+            ) : (
+              <IdleState />
             )}
           </div>
 

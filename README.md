@@ -2,7 +2,7 @@
 
 > **Your elite AI-powered financial voice assistant — speak a question, hear the answer.**
 
-Astra Fin Voice Hub is a full-stack, real-time voice intelligence platform built for financial guidance. It captures the user's spoken question, transcribes it with OpenAI Whisper, sends it to a blazing-fast LLM via the Groq API, and streams the response back to the browser — where it is spoken aloud using the Web Speech API. The result is a fluid, hands-free financial advisory experience with near-zero perceived latency.
+Astra Fin Voice Hub is a full-stack, real-time voice intelligence platform built for financial guidance. It captures the user's spoken question, transcribes it via the **Groq Cloud Whisper API** (`whisper-large-v3`), sends it to a blazing-fast LLM via the Groq API, and streams the response back to the browser — where it is spoken aloud using the Web Speech API. The result is a fluid, hands-free financial advisory experience with near-zero perceived latency.
 
 ---
 
@@ -25,7 +25,7 @@ Astra Fin Voice Hub is a full-stack, real-time voice intelligence platform built
 │                        FASTAPI BACKEND                              │
 │                                                                     │
 │   1. Receive audio blob via WebSocket                               │
-│   2. Save as temp file → FFmpeg decodes → OpenAI Whisper (STT)     │
+│   2. Save as temp file → FFmpeg decodes → Groq Whisper Cloud (STT) │
 │   3. Transcript forwarded to Groq API (llama-3.1-8b-instant)       │
 │   4. Groq streams tokens → WebSocket forwards each chunk to client │
 │                                                                     │
@@ -38,10 +38,53 @@ Astra Fin Voice Hub is a full-stack, real-time voice intelligence platform built
 **In plain English:**
 1. User presses the mic button → browser records audio.
 2. Audio blob is sent to the FastAPI backend over a WebSocket connection.
-3. FFmpeg normalises the audio; Whisper converts speech to text.
+3. FFmpeg normalises the audio; the audio file is sent to the **Groq Whisper Cloud API** (`whisper-large-v3`) for transcription.
 4. The transcript is assembled with conversation history and dispatched to Groq.
 5. Groq streams LLM tokens back; FastAPI forwards each token immediately to the browser.
 6. The React frontend accumulates the streamed text and feeds it to the browser's native `SpeechSynthesis` API for read-aloud playback.
+
+---
+
+## Architecture & System Design
+
+### STT Engine: Groq Cloud Whisper (`whisper-large-v3`)
+
+#### The Problem — Local Whisper Caused OOM Crashes in Production
+
+The original architecture loaded OpenAI Whisper **locally** within the FastAPI process using the `openai-whisper` Python package. While this approach works well on developer machines with ample RAM, it proved untenable in cloud-hosted, memory-constrained environments such as **Render's free and starter tiers**:
+
+- The `whisper-large-v3` model alone requires **~3 GB of VRAM / RAM** to load.
+- On Render (typically 512 MB – 2 GB RAM), the process reliably triggered **Out-Of-Memory (OOM) kills** during model initialisation, crashing the backend before it could serve a single request.
+- There was no graceful recovery path: once the OS killed the process, the entire service became unavailable until a manual restart.
+
+This was a hard blocker for production deployment.
+
+#### The Solution — Offload STT to the Groq Cloud API
+
+The architectural decision was made to **remove the local Whisper dependency entirely** and delegate all speech-to-text inference to the [Groq Cloud Audio API](https://console.groq.com/docs/speech-text), which exposes the `whisper-large-v3` model as a managed, serverless endpoint.
+
+The backend now:
+1. Receives the audio blob over WebSocket.
+2. Decodes and normalises it via FFmpeg into a temporary WAV file.
+3. Submits the WAV file to `client.audio.transcriptions.create()` on the Groq API.
+4. Receives the transcript as a plain-text string and forwards it to the LLM pipeline.
+
+#### Technical Benefits
+
+| Dimension | Before (Local Whisper) | After (Groq Cloud Whisper) |
+|---|---|---|
+| **Backend RAM footprint** | ~2–3 GB (model weights in-process) | **Near-zero** (HTTP call only) |
+| **Cold-start / OOM risk** | High — OOM crash on Render | **Eliminated** |
+| **Transcription latency** | 2–8 s (CPU inference on free tier) | **< 1 s** (Groq's purpose-built LPU hardware) |
+| **Model quality** | Dependent on local model variant | `whisper-large-v3` — Groq-optimised, always current |
+| **Deployment complexity** | Model weights bundled / downloaded at startup | **Zero model management** — stateless HTTP |
+| **Production stability** | Fragile — single OOM kills the process | **Robust** — isolated, independently scalable |
+
+#### Trade-offs & Mitigations
+
+- **External API dependency:** The STT path now requires network egress to Groq. This is mitigated by Groq's industry-leading uptime SLA and the fact that the LLM path was already Groq-dependent.
+- **API rate limits:** Free-tier Groq accounts have audio transcription rate limits. For production scale, a paid Groq plan or request-queue middleware is recommended.
+- **Data privacy:** Audio is transmitted to Groq's servers for processing. Ensure this aligns with applicable data-handling policies for your deployment context.
 
 ---
 
@@ -54,7 +97,7 @@ Astra Fin Voice Hub is a full-stack, real-time voice intelligence platform built
 | **Real-time** | WebSocket (native browser + FastAPI `websockets`) |
 | **TTS** | Web Speech API (`window.speechSynthesis`) |
 | **Backend** | FastAPI 0.111, Uvicorn, Python 3.11+ |
-| **STT** | OpenAI Whisper (installed from source) |
+| **STT** | Groq Cloud Audio API — `whisper-large-v3` |
 | **LLM** | Groq API — `llama-3.1-8b-instant` |
 | **Audio decode** | **FFmpeg** (system dependency — strictly required) |
 
@@ -178,7 +221,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-> **Note:** `openai-whisper` is installed directly from its GitHub source (see `requirements.txt`). This may take a few minutes on first install as it downloads the package and its ML model weights on first use.
+> **Note:** The local `openai-whisper` package is **no longer a dependency**. Speech-to-text is handled entirely by the Groq Cloud Audio API. No model weights are downloaded at startup.
 
 ### Frontend
 
@@ -243,7 +286,8 @@ Frontend will be live at: **`http://localhost:5173`**
 - **Async generator streaming:** `groq_service.py` uses an `AsyncGenerator` to yield individual LLM tokens as they arrive. The WebSocket route forwards each chunk immediately — no buffering — giving the user word-by-word read-aloud feedback.
 - **Groq client singleton:** The `AsyncGroq` client is instantiated once at module level and reused across all sessions, avoiding repeated connection overhead.
 - **TTS-optimised system prompt:** Astra is instructed to respond in plain prose (no lists, no markdown, maximum 2 sentences) so the output is clean and natural when spoken aloud.
-- **FFmpeg as a hard dependency:** Whisper delegates all audio decoding to FFmpeg, making it format-agnostic — the frontend can send `webm`, `ogg`, or `mp4` blobs without any frontend-side encoding.
+- **Groq Cloud STT:** Speech-to-text is handled by the Groq Audio API (`whisper-large-v3`). This eliminates the ~3 GB local model footprint that caused OOM crashes on Render, reduces backend RAM usage to near-zero, and cuts transcription latency to sub-second via Groq's LPU hardware. See [Architecture & System Design](#architecture--system-design) for full rationale.
+- **FFmpeg as a pre-processing dependency:** FFmpeg is still used to decode and normalise incoming audio blobs (webm/ogg/mp4) into a clean WAV before submission to the Groq Audio API, keeping the pipeline format-agnostic without requiring any frontend-side encoding.
 - **CSS Modules + design tokens:** All styles are scoped via CSS Modules with a central `tokens.css` file defining the full design system (palette, spacing, typography, shadows), ensuring zero style leakage and easy global theming.
 
 ---

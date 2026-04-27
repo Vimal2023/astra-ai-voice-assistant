@@ -9,8 +9,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Push content below the fixed header (≈56px) with a small buffer */
   justify-content: center;
-  padding: var(--sp-4);
+  padding: 72px var(--sp-4) var(--sp-4);
   position: relative;
   overflow: hidden;
 }
@@ -33,11 +34,17 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: var(--sp-5) var(--sp-6);
+  /* Compact header — reduces visual weight and reclaims vertical space */
+  padding: var(--sp-3) var(--sp-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: var(--z-raised);
+  /* Subtle glass backdrop so header doesn't bleed into content below */
+  background: hsl(222, 30%, 18%, 0.70);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid hsl(220, 20%, 35%, 0.50);
 }
 
 .brand {
@@ -60,11 +67,29 @@
   flex-shrink: 0;
 }
 
+/* Brand text block — stacked to prevent overlap on narrow viewports */
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
 .brandName {
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: var(--weight-semi);
   color: var(--color-text);
   letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* "Voice Assistant" sub-label sits below the logo name */
+.brandSubtitle {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-dim);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 /* ── Central console card ────────────────────────────────────────────────── */
@@ -146,7 +171,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; /* text naturally sits near bottom before mic */
+  justify-content: flex-end;
+  gap: var(--sp-8); /* Increased gap for clear distinction between question and answer */
   scroll-behavior: smooth;
 }
 
@@ -159,6 +185,7 @@
   gap: var(--sp-3);
   text-align: center;
   padding: var(--sp-8) 0;
+  margin-top: auto; /* Push idle state down to feel more balanced */
   opacity: 0;
   animation: fadeIn 0.6s var(--ease) 0.4s forwards;
 }
@@ -187,14 +214,16 @@
 
 /* ── Transcript pill ─────────────────────────────────────────────────────── */
 .transcriptPill {
-  margin-bottom: var(--sp-4);
-  padding: var(--sp-2) var(--sp-4);
-  border-radius: var(--r-full);
+  /* No bottom margin needed — gap on responseArea handles spacing */
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
   background: var(--color-accent-dim);
-  border: 1px solid hsl(38, 95%, 56%, 0.20);
+  border: 1px solid hsl(38, 95%, 56%, 0.22);
   align-self: flex-end;
   max-width: 80%;
   text-align: right;
+  /* Visual separator between response and user question */
+  border-left: 2px solid hsl(38, 95%, 56%, 0.50);
 }
 
 .transcriptLabel {
@@ -203,7 +232,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-accent);
-  margin-bottom: 2px;
+  margin-bottom: var(--sp-1);
 }
 
 .transcriptText {
@@ -273,33 +302,42 @@
   border-color: var(--color-text-dim);
 }
 
-/* ── Mobile ──────────────────────────────────────────────────────────────── */
+.responseWrapper {
+  animation: slideUp 0.4s var(--ease) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 @media (max-width: 600px) {
-  .page { padding: 0; }
+  /* On mobile the fixed header is ~52px; account for it exactly to minimize blank space */
+  .page {
+    padding: 52px 0 0;
+    justify-content: flex-start;
+  }
 
   .console {
     max-width: 100%;
-    min-height: 100dvh;
+    min-height: calc(100dvh - 52px);
     border-radius: 0;
     border-left: none;
     border-right: none;
     border-bottom: none;
   }
 
-  .responseArea { padding: var(--sp-5) var(--sp-5) var(--sp-3); }
-  .consoleTop   { padding: var(--sp-4) var(--sp-5); }
+  .responseArea  { padding: var(--sp-5) var(--sp-5) var(--sp-3); gap: var(--sp-6); }
+  .consoleTop    { padding: var(--sp-4) var(--sp-5); }
   .consoleBottom { padding: var(--sp-5) var(--sp-5) var(--sp-6); }
 
-  /* All text inside the response area centres on mobile */
-  .responseArea,
-  .idleState,
+  /* Keep transcript bubble left-aligned on mobile for chat-app feel */
   .transcriptPill {
-    align-items: center;
-    text-align: center;
+    align-self: flex-end;
+    text-align: right;
   }
 
-  .transcriptPill {
-    align-self: center;
+  .idleState {
+    align-items: center;
     text-align: center;
   }
 }
