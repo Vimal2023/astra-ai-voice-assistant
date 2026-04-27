@@ -60,11 +60,13 @@ def create_app() -> FastAPI:
     # ── CORS ──────────────────────────────────────────────────────────────
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:5173",
-            "https://astra-ai-voice-assistant.vercel.app"
-        ],
-        allow_credentials=True,
+        # allow_origins=[
+        #     "http://localhost:5173",
+        #     "https://astra-ai-voice-assistant.vercel.app"
+        # ],
+        # allow_credentials=True,
+        allow_origins=["*"], # Allow all origins to bypass strict CORS
+        allow_credentials=False, # Must be False when allow_origins is "*"
         allow_methods=["*"],
         allow_headers=["*"],
     )
