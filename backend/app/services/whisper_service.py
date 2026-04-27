@@ -17,7 +17,11 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import whisper  # openai-whisper
+# OLD: Local whisper import commented out
+# import whisper  # openai-whisper
+
+# NEW: Groq import
+from groq import AsyncGroq
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -30,19 +34,18 @@ logger = get_logger(__name__)
 _SUPPORTED_EXTENSIONS = {".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".wav", ".webm", ".ogg"}
 
 # ── Whisper model singleton ───────────────────────────────────────────────────
-# Using "base" for fast startup; swap to "small" / "medium" / "large" as needed.
-_WHISPER_MODEL_NAME = "base"
-_whisper_model: Optional[whisper.Whisper] = None  # type: ignore[name-defined]
-
-
-def _get_whisper_model() -> "whisper.Whisper":  # type: ignore[name-defined]
-    """Lazy-load and cache the Whisper model."""
-    global _whisper_model
-    if _whisper_model is None:
-        logger.info("Loading Whisper model '%s' …", _WHISPER_MODEL_NAME)
-        _whisper_model = whisper.load_model(_WHISPER_MODEL_NAME)
-        logger.info("Whisper model loaded successfully.")
-    return _whisper_model
+# OLD: Local model loading variables and functions commented out
+# _WHISPER_MODEL_NAME = "base"
+# _whisper_model: Optional[whisper.Whisper] = None  # type: ignore[name-defined]
+#
+# def _get_whisper_model() -> "whisper.Whisper":  # type: ignore[name-defined]
+#     """Lazy-load and cache the Whisper model."""
+#     global _whisper_model
+#     if _whisper_model is None:
+#         logger.info("Loading Whisper model '%s' …", _WHISPER_MODEL_NAME)
+#         _whisper_model = whisper.load_model(_WHISPER_MODEL_NAME)
+#         logger.info("Whisper model loaded successfully.")
+#     return _whisper_model
 
 
 def _validate_audio_extension(filename: str) -> None:
@@ -55,7 +58,7 @@ def _validate_audio_extension(filename: str) -> None:
 
 async def transcribe_audio(audio_bytes: bytes, filename: str) -> TranscriptionResponse:
     """
-    Transcribe raw audio bytes using a local Whisper model.
+    Transcribe raw audio bytes using Groq Whisper API.
 
     Args:
         audio_bytes: Raw binary content of the uploaded audio file.
@@ -77,19 +80,42 @@ async def transcribe_audio(audio_bytes: bytes, filename: str) -> TranscriptionRe
             tmp.write(audio_bytes)
             tmp_path = tmp.name
 
-        logger.info("Transcribing file '%s' (%d bytes) …", filename, len(audio_bytes))
-        model = _get_whisper_model()
-        result: dict = model.transcribe(tmp_path, fp16=False)
+        # OLD: Local Whisper inference logic commented out
+        # logger.info("Transcribing file '%s' (%d bytes) …", filename, len(audio_bytes))
+        # model = _get_whisper_model()
+        # result: dict = model.transcribe(tmp_path, fp16=False)
+        #
+        # transcript = result.get("text", "").strip()
+        # language = result.get("language")
+        # logger.info("Transcription complete. Language: %s | Length: %d chars", language, len(transcript))
+        #
+        # return TranscriptionResponse(
+        #     transcript=transcript,
+        #     language=language,
+        #     duration_seconds=None,  # Whisper doesn't expose duration directly
+        #     model_used=_WHISPER_MODEL_NAME,
+        # )
 
-        transcript = result.get("text", "").strip()
-        language = result.get("language")
+        # NEW: Groq API inference logic
+        logger.info("Transcribing file '%s' (%d bytes) via Groq API …", filename, len(audio_bytes))
+        
+        client = AsyncGroq(api_key=settings.groq_api_key)
+        with open(tmp_path, "rb") as file_obj:
+            result = await client.audio.transcriptions.create(
+                file=(filename, file_obj.read()),
+                model="whisper-large-v3",
+                response_format="verbose_json"
+            )
+
+        transcript = result.text.strip()
+        language = result.language
         logger.info("Transcription complete. Language: %s | Length: %d chars", language, len(transcript))
 
         return TranscriptionResponse(
             transcript=transcript,
             language=language,
-            duration_seconds=None,  # Whisper doesn't expose duration directly
-            model_used=_WHISPER_MODEL_NAME,
+            duration_seconds=result.duration, 
+            model_used="whisper-large-v3 (groq)",
         )
 
     except (AudioValidationError, TranscriptionError):
