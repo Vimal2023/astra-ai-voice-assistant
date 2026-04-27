@@ -13,7 +13,7 @@ const BASE_URL =
 
 const httpClient = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
-  timeout: 60_000, // 60 s — generous for Whisper inference
+  timeout: 120_000,
   headers: {
     Accept: "application/json",
   },
