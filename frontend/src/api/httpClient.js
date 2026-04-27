@@ -5,15 +5,17 @@
  * All HTTP interaction (e.g. POST /audio/transcribe) should go through here.
  */
 
-import axios from 'axios';
+import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://astra-ai-voice-assistant.onrender.com";
 
 const httpClient = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
   timeout: 60_000, // 60 s — generous for Whisper inference
   headers: {
-    Accept: 'application/json',
+    Accept: "application/json",
   },
 });
 
@@ -31,7 +33,7 @@ httpClient.interceptors.response.use(
       error.response?.data?.detail ||
       error.response?.data?.error ||
       error.message ||
-      'Unknown error';
+      "Unknown error";
     // Re-throw a normalised error so callers get a predictable shape
     return Promise.reject(new Error(detail));
   },

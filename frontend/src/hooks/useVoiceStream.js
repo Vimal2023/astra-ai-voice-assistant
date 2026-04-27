@@ -23,14 +23,15 @@
  *   } = useVoiceStream();
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { transcribeAudio } from '../api/audioApi';
-import { useSpeechSynthesis } from './useSpeechSynthesis';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { transcribeAudio } from "../api/audioApi";
+import { useSpeechSynthesis } from "./useSpeechSynthesis";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const WS_URL =
-  (import.meta.env.VITE_WS_URL || 'ws://localhost:8000') + '/api/v1/chat/ws';
+  (import.meta.env.VITE_WS_URL ||
+    "wss://astra-ai-voice-assistant.onrender.com") + "/api/v1/chat/ws";
 
 const RECONNECT_DELAY_MS = 2_000;
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -44,8 +45,8 @@ export function useVoiceStream() {
   const [isProcessing, setIsProcessing] = useState(false); // Whisper transcribing
   const [isConnected, setIsConnected] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [streamedText, setStreamedText] = useState('');
+  const [transcript, setTranscript] = useState("");
+  const [streamedText, setStreamedText] = useState("");
   const [error, setError] = useState(null);
   /** Full conversation history forwarded to the backend on each turn. */
   const [history, setHistory] = useState([]);
@@ -56,16 +57,16 @@ export function useVoiceStream() {
   const audioChunksRef = useRef([]);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimerRef = useRef(null);
-  const streamBufferRef = useRef('');      // accumulates raw tokens
-  const rafRef = useRef(null);             // requestAnimationFrame handle
-  const isMountedRef = useRef(true);       // guards state updates after unmount
+  const streamBufferRef = useRef(""); // accumulates raw tokens
+  const rafRef = useRef(null); // requestAnimationFrame handle
+  const isMountedRef = useRef(true); // guards state updates after unmount
 
   // ── RAF flush: drains buffer → state at display frame rate ────────────────
   const flushBuffer = useCallback(() => {
     if (!isMountedRef.current) return;
     if (streamBufferRef.current) {
       setStreamedText((prev) => prev + streamBufferRef.current);
-      streamBufferRef.current = '';
+      streamBufferRef.current = "";
     }
     rafRef.current = null;
   }, []);
@@ -100,47 +101,53 @@ export function useVoiceStream() {
         const message = JSON.parse(event.data);
 
         switch (message.type) {
-          case 'token':
+          case "token":
             // Queue token into buffer; commit to state via RAF
             streamBufferRef.current += message.content;
             scheduleFlush();
             break;
 
-          case 'done':
+          case "done":
             // Final flush — cancel any pending RAF and sync immediately
             if (rafRef.current) {
               cancelAnimationFrame(rafRef.current);
               rafRef.current = null;
             }
-            streamBufferRef.current = '';
+            streamBufferRef.current = "";
             setStreamedText(message.content);
             setIsStreaming(false);
             // Append the completed assistant turn to history
             setHistory((prev) => [
               ...prev,
-              { role: 'assistant', content: message.content },
+              { role: "assistant", content: message.content },
             ]);
             // Speak the full response only once the stream is complete
             speakText(message.content);
             break;
 
-          case 'error':
+          case "error":
             setError(message.content);
             setIsStreaming(false);
             break;
 
           default:
-            console.warn('[useVoiceStream] Unknown message type:', message.type);
+            console.warn(
+              "[useVoiceStream] Unknown message type:",
+              message.type,
+            );
         }
       } catch (parseError) {
-        console.error('[useVoiceStream] Failed to parse WS message:', parseError);
+        console.error(
+          "[useVoiceStream] Failed to parse WS message:",
+          parseError,
+        );
       }
     };
 
     ws.onerror = (event) => {
       if (!isMountedRef.current) return;
-      console.error('[useVoiceStream] WebSocket error', event);
-      setError('WebSocket connection error.');
+      console.error("[useVoiceStream] WebSocket error", event);
+      setError("WebSocket connection error.");
     };
 
     ws.onclose = (event) => {
@@ -172,7 +179,7 @@ export function useVoiceStream() {
       isMountedRef.current = false;
       clearTimeout(reconnectTimerRef.current);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      wsRef.current?.close(1000, 'Component unmounted');
+      wsRef.current?.close(1000, "Component unmounted");
       cancelSpeech(); // stop any in-progress TTS on unmount
     };
   }, [connectWebSocket]);
@@ -186,16 +193,18 @@ export function useVoiceStream() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
-      setError('Microphone access denied. Please allow microphone permissions.');
+      setError(
+        "Microphone access denied. Please allow microphone permissions.",
+      );
       return;
     }
 
     // Prefer webm/opus for broad browser support; fall back to first available
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : '';
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "";
 
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
     mediaRecorderRef.current = recorder;
@@ -210,7 +219,7 @@ export function useVoiceStream() {
       stream.getTracks().forEach((t) => t.stop());
 
       const blob = new Blob(audioChunksRef.current, {
-        type: mimeType || 'audio/webm',
+        type: mimeType || "audio/webm",
       });
       audioChunksRef.current = [];
 
@@ -226,7 +235,7 @@ export function useVoiceStream() {
         }
       } catch (err) {
         if (!isMountedRef.current) return;
-        setError(err.message || 'Transcription failed.');
+        setError(err.message || "Transcription failed.");
       } finally {
         if (isMountedRef.current) setIsProcessing(false);
       }
@@ -239,7 +248,7 @@ export function useVoiceStream() {
   const stopRecording = useCallback(() => {
     if (
       mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== 'inactive'
+      mediaRecorderRef.current.state !== "inactive"
     ) {
       mediaRecorderRef.current.stop();
     }
@@ -258,22 +267,19 @@ export function useVoiceStream() {
     (text, systemPrompt = null) => {
       const ws = wsRef.current;
       if (!ws || ws.readyState !== WebSocket.OPEN) {
-        setError('WebSocket is not connected. Please wait and try again.');
+        setError("WebSocket is not connected. Please wait and try again.");
         return;
       }
       if (!text?.trim()) return;
 
       // Reset streamed text for this new turn
-      streamBufferRef.current = '';
-      setStreamedText('');
+      streamBufferRef.current = "";
+      setStreamedText("");
       setIsStreaming(true);
       setError(null);
 
       // Append user turn to history before sending
-      const updatedHistory = [
-        ...history,
-        { role: 'user', content: text },
-      ];
+      const updatedHistory = [...history, { role: "user", content: text }];
       setHistory(updatedHistory);
 
       const payload = {
@@ -291,16 +297,16 @@ export function useVoiceStream() {
   const disconnect = useCallback(() => {
     clearTimeout(reconnectTimerRef.current);
     reconnectAttemptsRef.current = MAX_RECONNECT_ATTEMPTS; // suppress reconnect
-    wsRef.current?.close(1000, 'User disconnected');
+    wsRef.current?.close(1000, "User disconnected");
     setIsConnected(false);
   }, []);
 
   // ── Reset conversation history ────────────────────────────────────────────
   const clearHistory = useCallback(() => {
     setHistory([]);
-    setStreamedText('');
-    setTranscript('');
-    streamBufferRef.current = '';
+    setStreamedText("");
+    setTranscript("");
+    streamBufferRef.current = "";
   }, []);
 
   return {
